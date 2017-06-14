@@ -8,7 +8,7 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(ggmap)
-
+library(lubridate)
 
 # Read in data ------------------------------------------------------------
 
@@ -133,7 +133,7 @@ table(cafes$`industry(anzsic4)description`)
 
 table(cafes$seatingtype)
 
-qmplot(long, lat, data = cafes, maptype = "toner-lite", colour = seatingtype, alpha = 0.5, 
+qmplot(long, lat, data = filter(cafes, censusyear == 2016), maptype = "toner-lite", colour = seatingtype, alpha = 0.5, 
        size = numberofseats) + theme(legend.position="none")
 
 
@@ -195,7 +195,7 @@ table(pedestrian$Sensor_Name)
 pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
 
 ped_summarised <- pedestrian_v2 %>%
-  group_by(Time, Latitude, Longitude) %>%
+  group_by(Year, Latitude, Longitude) %>%
   summarise(
     total_volume = sum(Hourly_Counts)
   )
@@ -221,9 +221,17 @@ ggplot(data = ped_summarised, aes(x = Time, y = total_volume)) +
 #4-5pm is also the busiest time of day, with 12-1 also being popular. 
 #The lowest time is 4am. 
 
+ggplot(data = ped_summarised, aes(x = Year, y = total_volume)) + 
+  geom_bar(stat = "identity", aes(colour = "red", fill = "red")) + 
+  theme(legend.position = "none")
+
+#Foot traffic has increased considerably in the years between 2013-2016. 
+
 
 # Start to combine the data sets to get some insight ----------------------
 
+
+#What's been the trend of pedestrian traffic over time? In what locations?
 
 
 
