@@ -22,7 +22,10 @@ cafes <- read_csv(
 drinking_fountains <- read_csv(
   "Drinking_fountains.csv"
 )
-
+pedestrian <- read_csv(
+  "Pedestrian_volume__updated_monthly_.csv"
+)
+pedestrian_loc <- read_csv("Pedestrian_sensor_locations.csv")
 
 # Melb BBQ data -----------------------------------------------------------
 
@@ -174,4 +177,34 @@ df_summary
 
 qmplot(long, lat, data = df_summary, maptype = "toner-lite", color = Description) +
   theme(legend.position="none")
+
+
+
+# Pedestrian data ---------------------------------------------------------
+
+#remove the spaces from the column names
+colnames(pedestrian_loc) <- str_replace_all(colnames(pedestrian_loc), " ", "_")
+colnames(pedestrian)[9] <- "Sensor_Description"
+
+table(pedestrian_loc$Sensor_Description)
+table(pedestrian$Sensor_Name)
+
+#There appears to be the same locations in both datasets so I should be able to do a join
+# and get the lat and long of each sensor.
+
+pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
+
+ped_summarised <- pedestrian_v2 %>%
+  group_by(Day, Latitude, Longitude) %>%
+  summarise(
+    total_volume = sum(Hourly_Counts)
+  )
+
+qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume, 
+       alpha = 0.1, colour = Day) + theme(legend.position="none")
+#No surprises that Swanston St and Flinders St are the busiest in terms of pedestrian traffic
+
+#Does it change by day? 
+#Not from what I can see, the size of the bubbles looks pretty consistent. 
+
 
