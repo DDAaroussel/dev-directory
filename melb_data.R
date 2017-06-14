@@ -195,16 +195,37 @@ table(pedestrian$Sensor_Name)
 pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
 
 ped_summarised <- pedestrian_v2 %>%
-  group_by(Day, Latitude, Longitude) %>%
+  group_by(Time, Latitude, Longitude) %>%
   summarise(
     total_volume = sum(Hourly_Counts)
   )
 
-qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume, 
-       alpha = 0.1, colour = Day) + theme(legend.position="none")
+qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
+  theme(legend.position="none") + facet_wrap(~Month)
 #No surprises that Swanston St and Flinders St are the busiest in terms of pedestrian traffic
 
 #Does it change by day? 
-#Not from what I can see, the size of the bubbles looks pretty consistent. 
+#Not from what I can see, the size of the bubbles looks pretty consistent.
+
+#What more can I learn from this data set? Is there a better time, month, day etc for ped traffic?
+
+ggplot(data = ped_summarised, aes(x = Time, y = total_volume)) + 
+  geom_bar(stat = "identity", aes(colour = "red", fill = "red")) + 
+  theme(legend.position = "none")
+
+#October and March have the most pedestrian foot traffic, with June having the lowest. Not sure why though.  
+
+#Friday and Thursday have the most pedestrian foot traffic, with Sunday and Saturday having the lowest. 
+#Interesting that the weekend is the lowest.
+
+#4-5pm is also the busiest time of day, with 12-1 also being popular. 
+#The lowest time is 4am. 
+
+
+# Start to combine the data sets to get some insight ----------------------
+
+
+
+
 
 
