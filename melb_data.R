@@ -9,7 +9,11 @@ library(dplyr)
 library(stringr)
 library(ggmap)
 library(lubridate)
-
+library(plotly)
+library(devtools)
+devtools::install_github('hadley/ggplot2')
+install.packages("ggplot2")
+library(ggplot2)
 # Read in data ------------------------------------------------------------
 
 public_bbq_v1 <- read_csv("Public_barbecues.csv")
@@ -202,11 +206,6 @@ ped_summarised <- pedestrian_v2 %>%
     total_volume = sum(Hourly_Counts)
   )
 
-ped_vol_daily <- pedestrian_v2 %>%
-  group_by(date_test) %>%
-  summarise(
-    daily_volume = sum(Hourly_Counts)
-  )
 
 qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
   theme(legend.position="none")
@@ -221,8 +220,6 @@ ggplot(data = ped_summarised, aes(x = Time, y = total_volume)) +
   geom_bar(stat = "identity", aes(colour = "red", fill = "red")) + 
   theme(legend.position = "none")
 
-ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) + geom_smooth(se = FALSE)
-
 #October and March have the most pedestrian foot traffic, with June having the lowest. Not sure why though.  
 
 #Friday and Thursday have the most pedestrian foot traffic, with Sunday and Saturday having the lowest. 
@@ -235,16 +232,46 @@ ggplot(data = ped_summarised, aes(x = Year, y = total_volume)) +
   geom_bar(stat = "identity", aes(colour = "red", fill = "red")) + 
   theme(legend.position = "none")
 
-#Foot traffic has increased considerably in the years between 2013-2016. 
-
+#Foot traffic captured has increased considerably in the years between 2013-2016. This looks like it was
+#to do with more sensors being added gradually until 2016. 
 
 # Start to combine the data sets to get some insight ----------------------
-
 
 #What's been the trend of pedestrian traffic over time? In what locations? What calendar days showed the
 #most foot traffic?
 
+ped_vol_daily <- pedestrian_v2 %>%
+  filter(Year == 2015 | Year == 2016) %>%
+  group_by(date_test) %>%
+  summarise(
+    daily_volume = sum(Hourly_Counts)
+  )
 
+ped_vol_yearly <- pedestrian_v2 %>%
+  group_by(Year, Sensor_Description) %>%
+  summarise(
+    ped_volume = sum(Hourly_Counts)
+  )
+
+#Filtering for 2015 and 2016 so we minimise skew towards sensors that have been there longest
+
+filter(ped_vol_yearly, Year == 2015 | Year == 2016)
+
+yearly_chart <- ggplot(data = filter(ped_vol_yearly, Year == 2015| Year == 2016), 
+                       aes(x = Sensor_Description, y = ped_volume)) + geom_bar(stat = "identity") + 
+  coord_flip() + theme_light() + facet_wrap(~Year)
+
+yearly_chart
+
+ggplotly(yearly_chart)
+
+#The area around Flinders St station is the busiest in Melbourne, with Town Hall and Bourke St Mall
+#also ranking highly
+
+daily_chart <- ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) + 
+  geom_smooth(se = FALSE) + theme_bw()
+
+ggplotly(daily_chart)
 
 
 
