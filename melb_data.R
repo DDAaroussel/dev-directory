@@ -194,14 +194,22 @@ table(pedestrian$Sensor_Name)
 
 pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
 
+pedestrian_v2$date_test <- dmy_hm(pedestrian_v2$Date_Time)
+
 ped_summarised <- pedestrian_v2 %>%
   group_by(Year, Latitude, Longitude) %>%
   summarise(
     total_volume = sum(Hourly_Counts)
   )
 
+ped_vol_daily <- pedestrian_v2 %>%
+  group_by(date_test) %>%
+  summarise(
+    daily_volume = sum(Hourly_Counts)
+  )
+
 qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
-  theme(legend.position="none") + facet_wrap(~Month)
+  theme(legend.position="none")
 #No surprises that Swanston St and Flinders St are the busiest in terms of pedestrian traffic
 
 #Does it change by day? 
@@ -212,6 +220,8 @@ qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size 
 ggplot(data = ped_summarised, aes(x = Time, y = total_volume)) + 
   geom_bar(stat = "identity", aes(colour = "red", fill = "red")) + 
   theme(legend.position = "none")
+
+ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) + geom_smooth(se = FALSE)
 
 #October and March have the most pedestrian foot traffic, with June having the lowest. Not sure why though.  
 
@@ -231,7 +241,10 @@ ggplot(data = ped_summarised, aes(x = Year, y = total_volume)) +
 # Start to combine the data sets to get some insight ----------------------
 
 
-#What's been the trend of pedestrian traffic over time? In what locations?
+#What's been the trend of pedestrian traffic over time? In what locations? What calendar days showed the
+#most foot traffic?
+
+
 
 
 
