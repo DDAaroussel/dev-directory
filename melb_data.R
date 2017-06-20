@@ -10,10 +10,8 @@ library(stringr)
 library(ggmap)
 library(lubridate)
 library(plotly)
-library(devtools)
-devtools::install_github('hadley/ggplot2')
-install.packages("ggplot2")
 library(ggplot2)
+library(ggmap)
 # Read in data ------------------------------------------------------------
 
 public_bbq_v1 <- read_csv("Public_barbecues.csv")
@@ -137,8 +135,13 @@ table(cafes$`industry(anzsic4)description`)
 
 table(cafes$seatingtype)
 
-qmplot(long, lat, data = filter(cafes, censusyear == 2016), maptype = "toner-lite", colour = seatingtype, alpha = 0.5, 
-       size = numberofseats) + theme(legend.position="none")
+qmplot(long, lat, data = filter(cafes,
+                                censusyear == 2016 & 
+                                  `industry(anzsic4)description` == 'Pubs, Taverns and Bars' &
+                                  cluesmallarea == 'Melbourne (CBD)'
+                                ),
+       maptype = "toner-lite", 
+       alpha = 0.1, size = numberofseats) + theme(legend.position="none")
 
 
 
@@ -198,14 +201,14 @@ table(pedestrian$Sensor_Name)
 
 pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
 
-pedestrian_v2$date_test <- dmy_hm(pedestrian_v2$Date_Time)
+pedestrian_v2$date_test <- as_date(dmy_hm(pedestrian_v2$Date_Time))
 
 ped_summarised <- pedestrian_v2 %>%
-  group_by(Year, Latitude, Longitude) %>%
+  filter(Year == 2015 | Year == 2016) %>%
+  group_by(Latitude, Longitude) %>%
   summarise(
     total_volume = sum(Hourly_Counts)
   )
-
 
 qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
   theme(legend.position="none")
@@ -257,23 +260,28 @@ ped_vol_yearly <- pedestrian_v2 %>%
 
 filter(ped_vol_yearly, Year == 2015 | Year == 2016)
 
-yearly_chart <- ggplot(data = filter(ped_vol_yearly, Year == 2015| Year == 2016), 
+ggplot(data = filter(ped_vol_yearly, Year == 2015| Year == 2016), 
                        aes(x = Sensor_Description, y = ped_volume)) + geom_bar(stat = "identity") + 
   coord_flip() + theme_light() + facet_wrap(~Year)
-
-yearly_chart
-
-ggplotly(yearly_chart)
 
 #The area around Flinders St station is the busiest in Melbourne, with Town Hall and Bourke St Mall
 #also ranking highly
 
-daily_chart <- ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) + 
-  geom_smooth(se = FALSE) + theme_bw()
+ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) + 
+  geom_smooth() + theme(axis.text.x=element_text(angle=90,hjust=1)) +
+  scale_x_date(date_breaks = "3 months")
 
-ggplotly(daily_chart)
+# What's the most efficient place to go for a beer? ----------------
 
+qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
+  theme(legend.position="none")
 
-
+qmplot(long, lat, data = filter(cafes,
+                                censusyear == 2016 & 
+                                  `industry(anzsic4)description` == 'Pubs, Taverns and Bars' &
+                                  cluesmallarea == 'Melbourne (CBD)'
+),
+maptype = "toner-lite",
+alpha = 0.1, size = numberofseats) + theme(legend.position="none")
 
 
