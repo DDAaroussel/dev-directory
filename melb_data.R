@@ -12,6 +12,7 @@ library(lubridate)
 library(plotly)
 library(ggplot2)
 library(ggmap)
+library(forecast)
 # Read in data ------------------------------------------------------------
 
 public_bbq_v1 <- read_csv("Public_barbecues.csv")
@@ -72,14 +73,16 @@ summarised <- public_bbq_v2 %>%
   )
 summarised
 
+write_csv(summarised, "bbq_final.csv")
+
 #If we want to filter for  the most common BBQs 
 summarised_v2 <- filter(summarised, 
                         bbq_type == "Urban Design Double Hotplate" | bbq_type == "Urban Design Single Hotplate")
 
 #Swap out summarised & summarised_v2 to map unfiltered and filtered
-qmplot(long, lat, data = summarised, maptype = "toner-lite", color = I("red")) + facet_wrap(~bbq_type) +
+qmplot(long, lat, data = summarised, maptype = "toner-lite", color = I("red")) +
   theme(legend.position="none")
-qmplot(long, lat, data = summarised, maptype = "toner-lite", color = bbq_type) +
+qmplot(long, lat, data = summarised, source = "google", maptype = "terrain") + 
   theme(legend.position="none")
 
 #We can see where the different BBQs are spread out across Melb city
@@ -107,6 +110,8 @@ bike_share_v2 <- bike_share %>%
     long = as.numeric(bike_coords[,2]),
     availability_ratio = (nbbikes / nbempty)
   )
+
+write_csv(bike_share_v2, "bike_share_final.csv")
 
 ggmap(map) + geom_point(aes(x = lat, y = long), data = bike_share_v2, alpha = 0.5, size = availability_ratio)
 
@@ -143,7 +148,7 @@ qmplot(long, lat, data = filter(cafes,
        maptype = "toner-lite", 
        alpha = 0.1, size = numberofseats) + theme(legend.position="none")
 
-
+write_csv(cafes, "cafe_final.csv")
 
 
 # Drinking fountain data --------------------------------------------------
@@ -182,6 +187,8 @@ df_summary <- drinking_fountains_v2 %>%
   )
 df_summary
 
+write_csv(df_summary, "drinking_fountain_final.csv")
+
 qmplot(long, lat, data = df_summary, maptype = "toner-lite", color = Description) +
   theme(legend.position="none")
 
@@ -202,6 +209,8 @@ table(pedestrian$Sensor_Name)
 pedestrian_v2 <- left_join(pedestrian, pedestrian_loc, by = "Sensor_Description")
 
 pedestrian_v2$date_test <- as_date(dmy_hm(pedestrian_v2$Date_Time))
+
+write_csv(pedestrian_v2, "pedestrian_final.csv")
 
 ped_summarised <- pedestrian_v2 %>%
   filter(Year == 2015 | Year == 2016) %>%
@@ -236,7 +245,16 @@ ggplot(data = ped_summarised, aes(x = Year, y = total_volume)) +
   theme(legend.position = "none")
 
 #Foot traffic captured has increased considerably in the years between 2013-2016. This looks like it was
-#to do with more sensors being added gradually until 2016. 
+#to do with more sensors being added gradually until 2016.
+
+ped_uni_ts <- pedestrian_v2 %>%
+  group_by(ID) %>%
+  summarise(
+    total_volume = sum(Hourly_Counts)
+  )
+
+auto.arima(ped_uni_ts$total_volume)
+
 
 # Start to combine the data sets to get some insight ----------------------
 
@@ -271,11 +289,14 @@ ggplot(data = ped_vol_daily, aes(x = date_test, y = daily_volume)) +
   geom_smooth() + theme(axis.text.x=element_text(angle=90,hjust=1)) +
   scale_x_date(date_breaks = "3 months")
 
-# What's the most efficient place to go for a beer? ----------------
+# What's the most efficient place to go for a beer? Where's the nearest bike share to ride home afterwards?
+# Which BBQ do you use the next morning for a hungover breakfast?----------------
 
+#Pedestrian volume map plot for CBD
 qmplot(Longitude, Latitude, data = ped_summarised, maptype = "toner-lite", size = total_volume) + 
   theme(legend.position="none")
 
+#Pubs and bars map plot just for CBD
 qmplot(long, lat, data = filter(cafes,
                                 censusyear == 2016 & 
                                   `industry(anzsic4)description` == 'Pubs, Taverns and Bars' &
@@ -283,5 +304,10 @@ qmplot(long, lat, data = filter(cafes,
 ),
 maptype = "toner-lite",
 alpha = 0.1, size = numberofseats) + theme(legend.position="none")
+
+#Bike share map plot just for CBD
+qmplot(long, lat, data = filter(bike_share_v2, str_detect(bike_share_v2$featurename, "City") == TRUE), 
+                                maptype = "toner-lite", alpha = 0.5, 
+       size = availability_ratio) + theme(legend.position="none")
 
 
