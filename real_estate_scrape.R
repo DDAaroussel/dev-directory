@@ -6,7 +6,6 @@ library(rvest)
 library(purrr)
 library(magrittr)
 
-
 # Creating a list of sold properties --------------------------------------
 
 url_list <- character(length = 10)
@@ -16,7 +15,7 @@ for (i in 1:10){
 }
 
 linkcreation <- function(x) {
-  
+
   link <- read_html(x) %>%
     html_nodes(".property-card__link") %>%
     html_attr("href")  %>%
@@ -65,7 +64,22 @@ results <- lapply(link_matrix_final[1:10], function(url)
     html_text() %>%
     as.character()
   
-  data.frame(address, price, suburb, beds, baths, garage)
+  headline <- read_html(url) %>%
+    html_node(".medium-heading") %>%
+    html_text() %>%
+    as.character()
+  
+  describe <- read_html(url) %>%
+    html_node(".tell-me-more__text") %>%
+    html_text() %>%
+    as.character()
+  
+  typedate <- read_html(url) %>%
+    html_node(".property-info__secondary-content") %>%
+    html_text() %>%
+    as.character()
+  
+  data.frame(address, price, suburb, beds, baths, garage, headline, describe, typedate)
   
 })
 
