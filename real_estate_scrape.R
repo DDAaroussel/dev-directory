@@ -5,6 +5,7 @@
 library(rvest)
 library(purrr)
 library(magrittr)
+library(stringr)
 
 # Creating a list of sold properties --------------------------------------
 
@@ -13,6 +14,7 @@ url_list <- character(length = 10)
 for (i in 1:10){
   url_list[i] <- paste0("https://www.realestate.com.au/sold/list-",i)
 }
+
 
 linkcreation <- function(x) {
 
@@ -26,6 +28,21 @@ linkcreation <- function(x) {
 
 link_matrix <- sapply(url_list, linkcreation, USE.NAMES = FALSE, simplify = FALSE)
 link_matrix_final <- unlist(link_matrix, recursive = TRUE, use.names = FALSE)
+
+
+# Creating master ID list -------------------------------------------------
+
+master_id_list <- character(length(split_list))
+
+str_locate(link_matrix_final[1], "-")
+split_list <- str_split(link_matrix_final, "-")
+
+for (i in 1:length(split_list)) {
+
+  master_id_list[i] <- split_list[[i]][5]
+  #This occasionally pulls out a value that isn't an ID, which needs to be fixed.
+    
+} 
 
 
 # Writing the different CSS selectors of each property to a list then rbinding the list ---------
