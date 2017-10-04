@@ -8,13 +8,11 @@ library(magrittr)
 library(stringr)
 
 # Creating a list of sold properties --------------------------------------
-
 url_list <- character(length = 10)
 
 for (i in 1:10){
   url_list[i] <- paste0("https://www.realestate.com.au/sold/list-",i)
 }
-
 
 linkcreation <- function(x) {
 
@@ -26,28 +24,19 @@ linkcreation <- function(x) {
   return(link)
 }
 
+#Link_matrix and link_matrix_final are overwritten each time a new url_list is generated
 link_matrix <- sapply(url_list, linkcreation, USE.NAMES = FALSE, simplify = FALSE)
 link_matrix_final <- unlist(link_matrix, recursive = TRUE, use.names = FALSE)
 
+#Filter link_matrix_final_v2 to remove any links already in the master list
+link_matrix_final_v2 <- link_matrix_final[! link_matrix_final %in% master_list]
 
-# Creating master ID list -------------------------------------------------
-
-master_id_list <- character(length(split_list))
-
-str_locate(link_matrix_final[1], "-")
-split_list <- str_split(link_matrix_final, "-")
-
-for (i in 1:length(split_list)) {
-
-  master_id_list[i] <- split_list[[i]][5]
-  #This occasionally pulls out a value that isn't an ID, which needs to be fixed.
-    
-} 
-
+# Append each new link_matrix_final_v2 to a master list of all URLs -------------------------------------
+master_list <- append(master_list, link_matrix_final_v2)
 
 # Writing the different CSS selectors of each property to a list then rbinding the list ---------
 
-results <- lapply(link_matrix_final[1:10], function(url)
+results <- lapply(link_matrix_final_v2, function(url)
 
   {
   
@@ -103,4 +92,9 @@ results <- lapply(link_matrix_final[1:10], function(url)
 
 # Bind the different list items into a data frame -------------------------
 
-results_v2 <- do.call(rbind, results)
+results_temp <- do.call(rbind, results)
+
+#Append these new records to a master dataset 
+results_master <- rbind(results_temp, results_master)
+
+
