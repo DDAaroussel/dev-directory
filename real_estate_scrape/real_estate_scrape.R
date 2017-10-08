@@ -13,28 +13,28 @@ url_list <- character(length = 1000)
 for (i in seq_along(url_list)){
   url_list[i] <- paste0("https://www.realestate.com.au/sold/list-",i)
   url_list[i] <- paste0(url_list[i],".html")
-  setwd("D:/R/r4ds/html_files/lists")
+  setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/lists")
   download.file(url_list[i], destfile = paste0(i,"_html.html"), quiet = TRUE)
-  setwd("D:/R/r4ds")
+  setwd("D:/DEV/dev-directory/real_estate_scrape")
   local_html_list[i] <- paste0(i,"_html.html")
 }
 
 linkcreation <- function(x) {
   
-  setwd("D:/R/r4ds/html_files/lists")
+  setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/lists")
   
   link <- read_html(x) %>%
     html_nodes(".property-card__link") %>%
     html_attr("href")  %>%
     xml2::url_absolute("https://realestate.com.au/")
   
-  setwd("D:/R/r4ds")
+  setwd("D:/DEV/dev-directory/real_estate_scrape")
   
   return(link)
 }
 
 #Link_matrix and link_matrix_final are overwritten each time a new url_list is generated
-setwd("D:/R/r4ds/html_files/lists")
+setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/lists")
 link_matrix <- sapply(local_html_list, linkcreation, USE.NAMES = FALSE, simplify = FALSE)
 link_matrix_final <- unlist(link_matrix, recursive = TRUE, use.names = FALSE)
 link_matrix_final_sub <- str_sub(link_matrix_final, start = -9)
@@ -51,10 +51,10 @@ link_matrix_final_v2 <- link_matrix_final[! link_matrix_final %in% master_list]
 master_list <- append(master_list, link_matrix_final_v2)
 
 for (i in seq_along(link_matrix_final_v2)) {
-  setwd("D:/R/r4ds/html_files/properties")
+  setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/properties")
   download.file(link_matrix_final[i], destfile = paste0(link_matrix_final_sub[i], "_html.html"), 
                 quiet = TRUE)
-  setwd("D:/R/r4ds")
+  setwd("D:/DEV/dev-directory/real_estate_scrape")
 }
 
 properties_list <- paste0(link_matrix_final_sub, "_html.html")
@@ -62,7 +62,7 @@ properties_list <- paste0(link_matrix_final_sub, "_html.html")
 
 # Writing the different CSS selectors of each property to a list then rbinding the list ---------
 
-setwd("D:/R/r4ds/html_files/properties")
+setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/properties")
 
 results <- lapply(properties_list, function(url)
   
@@ -116,7 +116,7 @@ results <- lapply(properties_list, function(url)
   
 })
 
-setwd("D:/R/r4ds")
+setwd("D:/DEV/dev-directory/real_estate_scrape")
 
 # Bind the different list items into a data frame -------------------------
 results_temp <- do.call(rbind, results)
