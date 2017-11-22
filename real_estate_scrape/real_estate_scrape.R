@@ -8,15 +8,15 @@ library(magrittr)
 library(stringr)
 
 # Creating a list of sold properties --------------------------------------
-url_list <- character(length = 1000)
+url_list <- character(length = 6486)
 
-for (i in seq_along(url_list)){
+for (i in 3514:10000){
   url_list[i] <- paste0("https://www.realestate.com.au/sold/list-",i)
   url_list[i] <- paste0(url_list[i],".html")
   setwd("D:/DEV/dev-directory/real_estate_scrape/html_files/lists")
   download.file(url_list[i], destfile = paste0(i,"_html.html"), quiet = TRUE)
   setwd("D:/DEV/dev-directory/real_estate_scrape")
-  local_html_list[i] <- paste0(i,"_html.html")
+  local_html_list <- paste0(i,"_html.html")
 }
 
 linkcreation <- function(x) {
