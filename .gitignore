@@ -2,3 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pptx
+*.pppt
+*.csv
+*.tsv
+*.pdf
+Thums.db
